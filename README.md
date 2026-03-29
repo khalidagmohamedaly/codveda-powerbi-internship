@@ -147,21 +147,14 @@ Pour le fichier `.pbix` Power BI Desktop :
 - [Bonnes pratiques Star Schema](https://learn.microsoft.com/fr-fr/power-bi/guidance/star-schema)
 - [Codveda Technologies](https://www.codveda.com)
 
----
-
-## 🎥 Présentation Vidéo
-
-> 🔗 *Lien vidéo LinkedIn à ajouter après l'enregistrement*
-
-Script complet disponible : [`07_Documentation/video_script.md`](07_Documentation/video_script.md)
 
 ---
 
 ## 📬 Contact
 
 - 🔗 [LinkedIn — Khalid Ag Mohamed Aly](https://linkedin.com/in/khalid-ag-mohamed-aly)
-- 🐙 [GitHub](https://github.com/votre-username)
-- ✉️ khalid.aly@example.com
+- 🐙 [GitHub](https://github.com/khalidagmohamedaly)
+- ✉️ alansarymohamed38@gmail.com
 
 ---
 
