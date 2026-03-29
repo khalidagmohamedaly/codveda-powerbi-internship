@@ -1,0 +1,192 @@
+// ============================================================
+// MESURES DAX — NIVEAU 3 : ADVANCED
+// Codveda Power BI Internship — Khalid Ag Mohamed Aly
+// ============================================================
+// Fonctions avancées : RANKX, SWITCH, LOOKUPVALUE, VAR, CALCULATE avec ALL/ALLEXCEPT
+// Optimisation performance : utilisation de VAR pour éviter les recalculs
+
+// ────────────────────────────────────────────
+// SECTION 1 : RANKX — Classements dynamiques
+// ────────────────────────────────────────────
+
+// Classement des états par taux de churn (1 = pire)
+State Churn Rank =
+RANKX(
+    ALL(Churn[State]),
+    [Churn Rate %],
+    ,
+    DESC,
+    Dense
+)
+
+// Classement des états par volume de churn absolu
+State Churn Volume Rank =
+RANKX(
+    ALL(Churn[State]),
+    [Count Churned Customers],
+    ,
+    DESC,
+    Dense
+)
+
+// Top 5 États churners (filtre dynamique)
+Is Top 5 Churn State =
+IF([State Churn Volume Rank] <= 5, "Top 5", "Other")
+
+// Classement des pays par volume de posts (Sentiment)
+Country Posts Rank =
+RANKX(
+    ALL(Sentiment[Country]),
+    [Total Posts],
+    ,
+    DESC,
+    Dense
+)
+
+// ────────────────────────────────────────────
+// SECTION 2 : SWITCH — Logique conditionnelle avancée
+// ────────────────────────────────────────────
+
+// Étiquette de performance selon le taux de churn
+Churn Performance Label =
+SWITCH(TRUE(),
+    [Churn Rate %] > 30, "🔴 Critical — Immediate Action",
+    [Churn Rate %] > 20, "🟠 Severe — Investigate Root Cause",
+    [Churn Rate %] > 14, "🟡 Moderate — Monitor Closely",
+    [Churn Rate %] > 5,  "🟢 Acceptable — Standard Monitoring",
+    "✅ Excellent — Best Practice"
+)
+
+// Groupement des sentiments avec SWITCH (alternative à colonne calculée)
+Sentiment Group (Measure) =
+SWITCH(TRUE(),
+    SELECTEDVALUE(Sentiment[Sentiment]) IN {
+        "Positive", "Joy", "Happy", "Excitement", "Love", "Gratitude",
+        "Hopeful", "Awe", "Contentment", "Serenity"
+    }, "Positive",
+    SELECTEDVALUE(Sentiment[Sentiment]) IN {
+        "Negative", "Anger", "Fear", "Sadness", "Despair", "Grief"
+    }, "Negative",
+    "Neutral"
+)
+
+// Recommandation actionnable par catégorie de risque churn
+Churn Action Recommendation =
+SWITCH([Churn Performance Label],
+    "🔴 Critical — Immediate Action", "Launch retention campaign immediately",
+    "🟠 Severe — Investigate Root Cause", "Review International Plan pricing",
+    "🟡 Moderate — Monitor Closely", "Analyze customer service call patterns",
+    "🟢 Acceptable — Standard Monitoring", "Continue standard monitoring",
+    "Maintain current strategy"
+)
+
+// ────────────────────────────────────────────
+// SECTION 3 : LOOKUPVALUE — Référence croisée
+// ────────────────────────────────────────────
+
+// Récupérer le nom complet d'un état depuis DimState
+State Full Name =
+LOOKUPVALUE(
+    DimState[StateName],
+    DimState[StateCode], Churn[State]
+)
+
+// Récupérer la région d'un état
+State Region =
+LOOKUPVALUE(
+    DimState[Region],
+    DimState[StateCode], Churn[State]
+)
+
+// Récupérer le nom du mois depuis DimDate
+Month Name =
+LOOKUPVALUE(
+    DimDate[MonthName],
+    DimDate[Month], MONTH(Sentiment[Date])
+)
+
+// ────────────────────────────────────────────
+// SECTION 4 : VAR — Calculs complexes avec variables
+// ────────────────────────────────────────────
+
+// Impact financier du churn (revenu perdu estimé)
+Estimated Revenue Lost to Churn =
+VAR ChurnedCustomers = FILTER(Churn, Churn[Churn] = "True")
+VAR AvgRevenuePerCustomer =
+    AVERAGEX(
+        ALL(Churn),
+        Churn[Total day charge]
+        + Churn[Total eve charge]
+        + Churn[Total night charge]
+        + Churn[Total intl charge]
+    )
+VAR TotalChurned = COUNTROWS(ChurnedCustomers)
+RETURN
+    TotalChurned * AvgRevenuePerCustomer
+
+// Écart de charge journalière : churned vs retained
+Day Charge Lift (Churned vs Retained) =
+VAR AvgChurned = CALCULATE(AVERAGE(Churn[Total day charge]), Churn[Churn] = "True")
+VAR AvgRetained = CALCULATE(AVERAGE(Churn[Total day charge]), Churn[Churn] = "False")
+RETURN
+    AvgChurned - AvgRetained
+
+// Score de risque composite par client (0-100)
+// Basé sur : Plan International (40pts) + Appels service (30pts) + Charges élevées (30pts)
+Customer Risk Score =
+VAR IntlPlanScore = IF(Churn[International plan] = "Yes", 40, 0)
+VAR ServiceCallScore = MIN(Churn[Customer service calls] * 7.5, 30)
+VAR ChargeScore = MIN((Churn[Total day charge] - 20) * 1.5, 30)
+RETURN
+    ROUND(IntlPlanScore + ServiceCallScore + MAX(ChargeScore, 0), 0)
+
+// ────────────────────────────────────────────
+// SECTION 5 : INTELLIGENCE TEMPORELLE AVANCÉE
+// ────────────────────────────────────────────
+
+// Croissance YoY du sentiment positif
+Positive Sentiment YoY Growth % =
+VAR CurrentYearPositive = CALCULATE(
+    [Positive Sentiment %],
+    DATESYTD(DimDate[Date])
+)
+VAR PreviousYearPositive = CALCULATE(
+    [Positive Sentiment %],
+    SAMEPERIODLASTYEAR(DimDate[Date])
+)
+RETURN
+    DIVIDE(CurrentYearPositive - PreviousYearPositive, PreviousYearPositive, 0) * 100
+
+// Moyenne mobile 3 mois (posts sentiment)
+Posts 3M Rolling Average =
+AVERAGEX(
+    DATESINPERIOD(
+        DimDate[Date],
+        LASTDATE(DimDate[Date]),
+        -3,
+        MONTH
+    ),
+    [Total Posts]
+)
+
+// ────────────────────────────────────────────
+// SECTION 6 : OPTIMISATION PERFORMANCE
+// ────────────────────────────────────────────
+
+// ✅ Utiliser des mesures de base comme briques élémentaires
+// ✅ Éviter FILTER(ALL(Table)) si ALLEXCEPT suffit
+// ✅ VAR évite la double évaluation des expressions coûteuses
+// ✅ SELECTEDVALUE() plutôt que VALUES() pour les slicers single-select
+
+// Exemple : Churn Rate optimisé avec contexte de filtre préservé
+Churn Rate Optimized % =
+VAR _Total = CALCULATE(COUNTROWS(Churn), ALL(Churn[Churn]))
+VAR _Churned = CALCULATE(COUNTROWS(Churn), Churn[Churn] = "True")
+RETURN
+    DIVIDE(_Churned, _Total, 0) * 100
+
+// Mesure de débogage : affiche le contexte de filtre actif
+Debug Filter Context =
+"Rows in context: " & COUNTROWS(Churn)
+& " | Churn filter: " & SELECTEDVALUE(Churn[Churn], "Multiple")
+& " | State filter: " & SELECTEDVALUE(Churn[State], "All States")

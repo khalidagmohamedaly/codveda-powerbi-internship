@@ -1,0 +1,190 @@
+// ============================================================
+// MESURES DAX — NIVEAU 2 : BASICS
+// Codveda Power BI Internship — Khalid Ag Mohamed Aly
+// ============================================================
+// Toutes les mesures utilisent des variables (VAR) pour la lisibilité
+// Convention de nommage : [Verb_Subject_Context]
+// Toujours utiliser DIVIDE() — jamais l'opérateur /
+
+// ────────────────────────────────────────────
+// SECTION 1 : CHURN ANALYSIS
+// ────────────────────────────────────────────
+
+// Taux de churn global (en %)
+Churn Rate % =
+VAR TotalCustomers = COUNTROWS(Churn)
+VAR ChurnedCustomers = COUNTROWS(FILTER(Churn, Churn[Churn] = "True"))
+RETURN
+    DIVIDE(ChurnedCustomers, TotalCustomers, 0) * 100
+
+// Nombre absolu de clients ayant churné
+Count Churned Customers =
+COUNTROWS(FILTER(Churn, Churn[Churn] = "True"))
+
+// Nombre de clients retenus
+Count Retained Customers =
+COUNTROWS(FILTER(Churn, Churn[Churn] = "False"))
+
+// Charge journalière moyenne — tous clients
+Avg Day Charge =
+AVERAGE(Churn[Total day charge])
+
+// Charge journalière moyenne — clients churned seulement
+Avg Day Charge Churned =
+CALCULATE(
+    AVERAGE(Churn[Total day charge]),
+    Churn[Churn] = "True"
+)
+
+// Charge journalière moyenne — clients retenus
+Avg Day Charge Retained =
+CALCULATE(
+    AVERAGE(Churn[Total day charge]),
+    Churn[Churn] = "False"
+)
+
+// Taux de churn — clients AVEC plan international
+Intl Plan Churn Rate % =
+CALCULATE(
+    [Churn Rate %],
+    Churn[International plan] = "Yes"
+)
+
+// Taux de churn — clients SANS plan international
+No Intl Plan Churn Rate % =
+CALCULATE(
+    [Churn Rate %],
+    Churn[International plan] = "No"
+)
+
+// Appels service client moyens (churned)
+Avg Service Calls Churned =
+CALCULATE(
+    AVERAGE(Churn[Customer service calls]),
+    Churn[Churn] = "True"
+)
+
+// Total des charges toutes périodes confondues
+Total Revenue All Periods =
+SUMX(
+    Churn,
+    Churn[Total day charge]
+    + Churn[Total eve charge]
+    + Churn[Total night charge]
+    + Churn[Total intl charge]
+)
+
+// Catégorie de risque (mesure de label dynamique)
+Churn Risk Label =
+VAR Rate = [Churn Rate %]
+RETURN
+    IF(Rate > 20, "🔴 High Risk",
+    IF(Rate > 10, "🟡 Medium Risk",
+                  "🟢 Low Risk"))
+
+// ────────────────────────────────────────────
+// SECTION 2 : SENTIMENT ANALYSIS
+// ────────────────────────────────────────────
+
+// Nombre total de posts analysés
+Total Posts =
+COUNTROWS(Sentiment)
+
+// Pourcentage de sentiment positif
+Positive Sentiment % =
+VAR TotalPosts = COUNTROWS(Sentiment)
+VAR PositivePosts = COUNTROWS(
+    FILTER(Sentiment, Sentiment[Macro_Sentiment] = "Positive")
+)
+RETURN
+    DIVIDE(PositivePosts, TotalPosts, 0) * 100
+
+// Pourcentage de sentiment négatif
+Negative Sentiment % =
+DIVIDE(
+    COUNTROWS(FILTER(Sentiment, Sentiment[Macro_Sentiment] = "Negative")),
+    COUNTROWS(Sentiment),
+    0
+) * 100
+
+// Engagement moyen par post
+Avg Engagement per Post =
+AVERAGE(Sentiment[Total_Engagement])
+
+// Posts par plateforme (utiliser avec slicer Platform)
+Posts Count =
+COUNTROWS(Sentiment)
+
+// ────────────────────────────────────────────
+// SECTION 3 : IRIS DATASET
+// ────────────────────────────────────────────
+
+// Longueur moyenne des sépales
+Avg Sepal Length =
+AVERAGE(Iris[sepal_length])
+
+// Largeur moyenne des pétales
+Avg Petal Width =
+AVERAGE(Iris[petal_width])
+
+// Ratio pétale moyen par espèce (utiliser avec slicer species)
+Avg Petal Ratio =
+AVERAGEX(
+    Iris,
+    DIVIDE(Iris[petal_length], Iris[petal_width], BLANK())
+)
+
+// ────────────────────────────────────────────
+// SECTION 4 : BOSTON HOUSING
+// ────────────────────────────────────────────
+
+// Valeur médiane des maisons
+Avg Home Value (USD) =
+AVERAGE(Housing[MEDV]) * 1000
+
+// Valeur médiane par catégorie de criminalité (utiliser avec slicer)
+Avg Value by Crime Level =
+CALCULATE(
+    [Avg Home Value (USD)],
+    ALLEXCEPT(Housing, Housing[Crime_Risk_Category])
+)
+
+// Nombre de maisons par catégorie de prix
+Houses in Category =
+COUNTROWS(Housing)
+
+// ────────────────────────────────────────────
+// SECTION 5 : INTELLIGENCE TEMPORELLE (Sentiment)
+// ────────────────────────────────────────────
+// Nécessite une table DimDate reliée à Sentiment[Date]
+
+// Posts YTD (Year-to-Date)
+Posts YTD =
+TOTALYTD(
+    [Total Posts],
+    DimDate[Date]
+)
+
+// Posts MTD (Month-to-Date)
+Posts MTD =
+TOTALMTD(
+    [Total Posts],
+    DimDate[Date]
+)
+
+// Posts QTD (Quarter-to-Date)
+Posts QTD =
+TOTALQTD(
+    [Total Posts],
+    DimDate[Date]
+)
+
+// Croissance MoM (Month-over-Month)
+Posts MoM Growth % =
+VAR CurrentMonth = [Total Posts]
+VAR PreviousMonth = CALCULATE(
+    [Total Posts],
+    DATEADD(DimDate[Date], -1, MONTH)
+)
+RETURN
+    DIVIDE(CurrentMonth - PreviousMonth, PreviousMonth, 0) * 100

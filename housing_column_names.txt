@@ -1,0 +1,26 @@
+# Boston Housing Dataset — Noms des Colonnes
+# À utiliser pour renommer les colonnes dans Power Query Editor
+# Source : UCI Machine Learning Repository (Harrison & Rubinfeld, 1978)
+# Séparateur : espace(s) multiples — utiliser "Column1" à "Column14" avant renommage
+
+Column1  → CRIM      # Per capita crime rate by town
+Column2  → ZN        # Proportion of residential land zoned for lots over 25,000 sq.ft
+Column3  → INDUS     # Proportion of non-retail business acres per town
+Column4  → CHAS      # Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)
+Column5  → NOX       # Nitric oxides concentration (parts per 10 million)
+Column6  → RM        # Average number of rooms per dwelling
+Column7  → AGE       # Proportion of owner-occupied units built prior to 1940
+Column8  → DIS       # Weighted distances to five Boston employment centres
+Column9  → RAD       # Index of accessibility to radial highways
+Column10 → TAX       # Full-value property-tax rate per $10,000
+Column11 → PTRATIO   # Pupil-teacher ratio by town
+Column12 → B        # 1000(Bk - 0.63)^2 where Bk is the proportion of Black residents
+Column13 → LSTAT     # % lower status of the population
+Column14 → MEDV      # Median value of owner-occupied homes in $1,000s ← TARGET VARIABLE
+
+# NOTES IMPORTANTES :
+# - MEDV est la variable cible (régression)
+# - CHAS est binaire (0 ou 1) — traiter comme entier, pas comme décimal
+# - MEDV * 1000 = valeur réelle en dollars (créer colonne MEDV_USD)
+# - Valeur médiane MEDV : ~22.5 (soit $22,500)
+# - Valeur max MEDV : 50.0 (données censurées au-delà de $50,000)

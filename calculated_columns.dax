@@ -1,0 +1,112 @@
+// ============================================================
+// COLONNES CALCULÉES — Niveau 2 (À créer dans les tables)
+// ============================================================
+// Note : Les colonnes calculées s'évaluent en Row Context
+// Elles sont calculées une fois au refresh, stockées dans le modèle
+// Préférer Power Query (M) pour les transformations simples
+// Réserver DAX aux colonnes nécessitant des références à d'autres tables
+
+// ────────────────────────────────────────────
+// TABLE : Churn
+// ────────────────────────────────────────────
+
+// Segmentation de l'ancienneté client
+Customer_Tenure_Group =
+IF(
+    Churn[Account length] <= 50, "New (0-50 days)",
+    IF(
+        Churn[Account length] <= 100, "Regular (51-100 days)",
+        "Loyal (101+ days)"
+    )
+)
+
+// Catégorie de risque composite
+Churn_Risk_Category =
+SWITCH(TRUE(),
+    Churn[International plan] = "Yes" && Churn[Customer service calls] >= 4, "Very High Risk",
+    Churn[International plan] = "Yes", "High Risk",
+    Churn[Customer service calls] >= 4, "Medium Risk",
+    "Low Risk"
+)
+
+// Charge totale journalière + soir + nuit
+Total_All_Charges =
+Churn[Total day charge]
++ Churn[Total eve charge]
++ Churn[Total night charge]
++ Churn[Total intl charge]
+
+// Label lisible pour la colonne Churn
+Churn_Label =
+IF(Churn[Churn] = "True", "Churned", "Retained")
+
+// ────────────────────────────────────────────
+// TABLE : Iris
+// ────────────────────────────────────────────
+
+// Ratio pétales — meilleur discriminant entre espèces
+Petal_Ratio =
+DIVIDE(
+    Iris[petal_length],
+    Iris[petal_width],
+    BLANK()
+)
+
+// Ratio sépales
+Sepal_Ratio =
+DIVIDE(
+    Iris[sepal_length],
+    Iris[sepal_width],
+    BLANK()
+)
+
+// Catégorie de taille de pétale
+Petal_Size_Category =
+SWITCH(TRUE(),
+    Iris[petal_length] < 2, "Small (<2cm)",
+    Iris[petal_length] < 4, "Medium (2-4cm)",
+    "Large (4+cm)"
+)
+
+// ────────────────────────────────────────────
+// TABLE : Housing (Boston)
+// ────────────────────────────────────────────
+
+// Valeur réelle en dollars
+MEDV_USD =
+Housing[MEDV] * 1000
+
+// Catégorie de prix
+Price_Category =
+SWITCH(TRUE(),
+    Housing[MEDV] < 15, "Budget (<$15K)",
+    Housing[MEDV] < 25, "Mid-Range ($15-25K)",
+    Housing[MEDV] < 35, "Premium ($25-35K)",
+    "Luxury ($35K+)"
+)
+
+// Score de criminalité relatif
+Crime_Risk_Category =
+SWITCH(TRUE(),
+    Housing[CRIM] < 0.1, "Very Low",
+    Housing[CRIM] < 1,   "Low",
+    Housing[CRIM] < 10,  "Medium",
+    "High"
+)
+
+// ────────────────────────────────────────────
+// TABLE : Sentiment
+// ────────────────────────────────────────────
+
+// Engagement total (Retweets + Likes)
+Total_Engagement =
+Sentiment[Retweets] + Sentiment[Likes]
+
+// Catégorie d'engagement
+Engagement_Category =
+SWITCH(TRUE(),
+    Sentiment[Total_Engagement] < 10,  "Low",
+    Sentiment[Total_Engagement] < 50,  "Medium",
+    Sentiment[Total_Engagement] < 100, "High",
+    "Viral"
+)
