@@ -32,6 +32,27 @@
 ## 🎯 Vue d'Ensemble
 
 Ce projet démontre la maîtrise complète du pipeline Power BI — de l'import des données brutes jusqu'aux insights actionnables. Un dashboard interactif analysant **4,763 enregistrements** répartis sur **5 datasets** différents.
+## 📊 Aperçu du Dashboard
+
+### Vue d'Ensemble
+![Dashboard Overview](assets/dashboard_overview.png)
+*Synthèse des 5 datasets avec KPIs principaux et qualité des données*
+
+### Analyse Churn
+![Churn Analysis](assets/dashboard_churn.png)
+*Identification des facteurs de risque : International Plan = 42% de churn*
+
+### Analyse Sentiment
+![Sentiment Analysis](assets/dashboard_sentiment.png)
+*Répartition des émotions sur les réseaux sociaux (62% positif)*
+
+### Iris Dataset
+![Iris Analysis](assets/dashboard_iris.png)
+*Classification des espèces avec ratios de pétales*
+
+### Référence DAX
+![DAX Measures](assets/dashboard_dax.png)
+*Bibliothèque de mesures DAX prêtes à l'emploi*
 
 **Datasets analysés** :
 - 📉 **Churn Telecom** (3,333 clients) — Analyse prédictive de l'attrition
